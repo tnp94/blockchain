@@ -6,16 +6,28 @@ class Block {
       this.data = data;
       this.previousHash = previousHash;
       this.hash = this.calculateHash();
+      this.nonce = 0;
    }
 
    calculateHash() {
-      return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data)).toString();
+      return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.data) + this.nonce).toString();
+   }
+
+   mineBlock(difficulty) {
+      while(this.hash.substring(0, difficulty) !== Array(difficulty + 1).join('0'))
+      {
+         this.hash = this.calculateHash();
+         this.nonce += 1;
+      }
+
+      console.log(`Blocked mined: ${this.hash}`);
    }
 }
 
 class BlockChain {
    constructor() {
       this.chain = [this.createGenesisBlock()];
+      this.difficulty = 4;
    }
 
    createGenesisBlock() {
@@ -28,7 +40,7 @@ class BlockChain {
 
    addBlock(newBlock) {
       newBlock.previousHash = this.getLatestBlock().hash;
-      newBlock.hash = newBlock.calculateHash();
+      newBlock.mineBlock(this.difficulty);
       this.chain.push(newBlock);
    }
 
@@ -52,18 +64,10 @@ class BlockChain {
 }
 
 let ninjaCoin = new BlockChain();
+
+console.log(`Mining block 1...`);
 ninjaCoin.addBlock(new Block(ninjaCoin.getLatestBlock.index + 1, "12/8/2020", {notes: "First test data"}));
+
+console.log(`Mining block 2...`);
 ninjaCoin.addBlock(new Block(ninjaCoin.getLatestBlock.index + 1, "12/9/2020", {notes: "Second test data"}));
 
-console.log(JSON.stringify(ninjaCoin, null, 2));
-// console.log(ninjaCoin);
-
-console.log(`Is chain valid? ${ninjaCoin.isChainValid()}`);
-
-ninjaCoin.chain[1].data = {notes: "This was modified"};
-ninjaCoin.chain[1].hash = ninjaCoin.chain[1].calculateHash();
-
-console.log(JSON.stringify(ninjaCoin, null, 2));
-// console.log(ninjaCoin);
-
-console.log(`Is chain valid? ${ninjaCoin.isChainValid()}`);
